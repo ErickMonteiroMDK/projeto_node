@@ -6,18 +6,18 @@ services:
     ports:
       - '5432:5432'
     environment:
-      - POSTGRES_USER=docker
-      - POSTGRES_PASSWORD=docker
-      - POSTGRES_DB=projeto_node
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: projeto_node
     volumes:
       - projeto_node_pg_data:/bitnami/postgresql
 
   redis:
     image: bitnami/redis:latest
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
     ports:
       - '6379:6379'
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
     volumes:
       - projeto_node_redis_data:/bitnami/redis/data
 
