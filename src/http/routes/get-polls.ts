@@ -12,17 +12,15 @@ export async function getPoll(app: FastifyInstance) {
         const { pollId } = getPollParams.parse(request.params);
 
         const poll = await prisma.poll.findUnique({
-            where: {
-                id: pollId,
-            },
+            where: { id: pollId },
             include: {
                 options: {
                     select: {
                         id: true,
-                        title: true
-                    }
-                }
-            }
+                        title: true,
+                    },
+                },
+            },
         });
 
         if (!poll) {
@@ -31,26 +29,24 @@ export async function getPoll(app: FastifyInstance) {
 
         const result = await redis.zrange(pollId, 0, -1, 'WITHSCORES');
 
-        const votes = result.reduce((obj, line, index) => {
+        const votes = result.reduce<Record<string, number>>((obj, line, index) => {
             if (index % 2 === 0) {
-                const score = parseInt(result[index + 1], 10); 
+                const score = parseInt(result[index + 1], 10);
                 obj[line] = score;
             }
             return obj;
-        }, {} as Record<string, number>);
+        }, {});
 
         return reply.send({
             poll: {
                 id: poll.id,
                 title: poll.title,
-                options: poll.options.map(option => {
-                    return {
-                        id: option.id,
-                        title: option.title,
-                        score: option.id in votes ? votes[option.id] : 0 // Corrigido aqui
-                    }
-                })
-            }
+                options: poll.options.map(option => ({
+                    id: option.id,
+                    title: option.title,
+                    score: votes[option.id] || 0,
+                })),
+            },
         });
     });
 }
